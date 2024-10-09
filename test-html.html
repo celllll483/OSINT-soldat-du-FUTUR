@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recherche de sources sur les innovations du soldat du futur</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        select, button { margin: 10px 0; padding: 5px; }
+        #output { white-space: pre-wrap; background-color: #f0f0f0; padding: 10px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Recherche de sources sur les innovations du soldat du futur</h1>
+    <select id="pays">
+        <option value="">Choisissez un pays</option>
+        <option value="Allemagne">Allemagne</option>
+        <option value="Suède">Suède</option>
+        <option value="Espagne">Espagne</option>
+        <option value="Royaume-Uni">Royaume-Uni</option>
+        <option value="Italie">Italie</option>
+    </select>
+    <select id="domaine">
+        <option value="">Choisissez un domaine</option>
+        <option value="Armement">Armement</option>
+        <option value="Protection">Protection</option>
+        <option value="Aide à la visibilité">Aide à la visibilité</option>
+        <option value="Communication">Communication</option>
+        <option value="Tout">Tout</option>
+    </select>
+    <select id="type_source">
+        <option value="">Choisissez un type de source</option>
+        <option value="Réseaux sociaux">Réseaux sociaux</option>
+        <option value="Sites ministères de la défense">Sites ministères de la défense</option>
+        <option value="Presse spécialisée">Presse spécialisée</option>
+        <option value="Tout">Tout</option>
+    </select>
+    <button onclick="rechercher()">Rechercher</button>
+    <div id="output"></div>
+
+    <script>
+        async function initPyodide() {
+            let pyodide = await loadPyodide();
+            await pyodide.loadPackage("micropip");
+            return pyodide;
+        }
+
+        let pyodideReadyPromise = initPyodide();
+
+        async function rechercher() {
+            let pyodide = await pyodideReadyPromise;
+            let pays = document.getElementById("pays").value;
+            let domaine = document.getElementById("domaine").value;
+            let type_source = document.getElementById("type_source").value;
+
+            if (!pays || !domaine || !type_source) {
+                alert("Veuillez sélectionner toutes les options.");
+                return;
+            }
+
+            let code = `
+sources = {
+    "Allemagne": {
+        "Réseaux sociaux": ["Twitter @Bundeswehr", "Facebook Bundeswehr"],
+        "Sites ministères de la défense": ["www.bmvg.de"],
+        "Presse spécialisée": ["www.esut.de", "www.hartpunkt.de"]
+    },
+    "Suède": {
+        "Réseaux sociaux": ["Twitter @Forsvarsmakten", "Instagram @forsvarsmakten"],
+        "Sites ministères de la défense": ["www.forsvarsmakten.se"],
+        "Presse spécialisée": ["www.soldf.com"]
+    },
+    "Espagne": {
+        "Réseaux sociaux": ["Twitter @EjercitoTierra", "YouTube Ejército de Tierra"],
+        "Sites ministères de la défense": ["www.defensa.gob.es"],
+        "Presse spécialisée": ["www.defensa.com"]
+    },
+    "Royaume-Uni": {
+        "Réseaux sociaux": ["Twitter @BritishArmy", "Facebook British Army"],
+        "Sites ministères de la défense": ["www.gov.uk/government/organisations/ministry-of-defence"],
+        "Presse spécialisée": ["www.janes.com", "www.army-technology.com"]
+    },
+    "Italie": {
+        "Réseaux sociaux": ["Twitter @Esercito", "Instagram @esercito_italiano"],
+        "Sites ministères de la défense": ["www.difesa.it"],
+        "Presse spécialisée": ["www.analisidifesa.it"]
+    }
+}
+
+def obtenir_sources(pays, domaine, type_source):
+    resultats = []
+    for source_type, urls in sources[pays].items():
+        if type_source == "Tout" or source_type == type_source:
+            resultats.extend(urls)
+    return resultats
+
+pays = "${pays}"
+domaine = "${domaine}"
+type_source = "${type_source}"
+
+resultats = obtenir_sources(pays, domaine, type_source)
+
+output = f"Sources pour {pays} - {domaine} - {type_source}:\\n"
+for source in resultats:
+    output += f"- {source}\\n"
+
+output
+            `;
+
+            try {
+                let result = await pyodide.runPythonAsync(code);
+                document.getElementById("output").textContent = result;
+            } catch (error) {
+                console.error("Erreur Python:", error);
+                document.getElementById("output").textContent = "Une erreur s'est produite lors de l'exécution du code Python.";
+            }
+        }
+    </script>
+</body>
+</html>
